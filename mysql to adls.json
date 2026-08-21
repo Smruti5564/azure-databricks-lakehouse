@@ -1,0 +1,171 @@
+{
+    "name": "MySQL to ADLS",
+    "properties": {
+        "activities": [
+            {
+                "name": "LookUpMySQL",
+                "type": "Lookup",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "source": {
+                        "type": "MySqlSource",
+                        "query": "SELECT table_name FROM information_schema.tables WHERE table_schema = 'ecommercedb';"
+                    },
+                    "dataset": {
+                        "referenceName": "ecommercemysqlds1",
+                        "type": "DatasetReference"
+                    },
+                    "firstRowOnly": false
+                }
+            },
+            {
+                "name": "ForEach1",
+                "type": "ForEach",
+                "dependsOn": [
+                    {
+                        "activity": "LookUpMySQL",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "userProperties": [],
+                "typeProperties": {
+                    "items": {
+                        "value": "@activity('LookUpMySQL').output.value",
+                        "type": "Expression"
+                    },
+                    "isSequential": true,
+                    "activities": [
+                        {
+                            "name": "Copy data1",
+                            "type": "Copy",
+                            "dependsOn": [],
+                            "policy": {
+                                "timeout": "0.12:00:00",
+                                "retry": 0,
+                                "retryIntervalInSeconds": 30,
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "userProperties": [],
+                            "typeProperties": {
+                                "source": {
+                                    "type": "MySqlSource"
+                                },
+                                "sink": {
+                                    "type": "ParquetSink",
+                                    "storeSettings": {
+                                        "type": "AzureBlobFSWriteSettings"
+                                    },
+                                    "formatSettings": {
+                                        "type": "ParquetWriteSettings"
+                                    }
+                                },
+                                "enableStaging": false,
+                                "translator": {
+                                    "type": "TabularTranslator",
+                                    "typeConversion": true,
+                                    "typeConversionSettings": {
+                                        "allowDataTruncation": true,
+                                        "treatBooleanAsNumber": false
+                                    }
+                                }
+                            },
+                            "inputs": [
+                                {
+                                    "referenceName": "ecommercemysqlds2",
+                                    "type": "DatasetReference",
+                                    "parameters": {
+                                        "tableName": {
+                                            "value": "@item().TABLE_NAME",
+                                            "type": "Expression"
+                                        }
+                                    }
+                                }
+                            ],
+                            "outputs": [
+                                {
+                                    "referenceName": "ADLSParquetDS",
+                                    "type": "DatasetReference",
+                                    "parameters": {
+                                        "foldername": {
+                                            "value": "@item().TABLE_NAME",
+                                            "type": "Expression"
+                                        },
+                                        "filename": {
+                                            "value": "@concat(item().TABLE_NAME, '.parquet')",
+                                            "type": "Expression"
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Notebook1",
+                            "type": "DatabricksNotebook",
+                            "dependsOn": [
+                                {
+                                    "activity": "Copy data1",
+                                    "dependencyConditions": [
+                                        "Succeeded"
+                                    ]
+                                }
+                            ],
+                            "policy": {
+                                "timeout": "0.12:00:00",
+                                "retry": 0,
+                                "retryIntervalInSeconds": 30,
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "userProperties": [],
+                            "typeProperties": {
+                                "notebookPath": "/Users/smrutiranjan5564@gmail.com/logging_notebook",
+                                "baseParameters": {
+                                    "table_name": {
+                                        "value": "@item().TABLE_NAME",
+                                        "type": "Expression"
+                                    },
+                                    "row_count": {
+                                        "value": "@string(activity('Copy data1').output.rowsCopied)",
+                                        "type": "Expression"
+                                    },
+                                    "duration": {
+                                        "value": "@string(activity('Copy data1').output.copyDuration)",
+                                        "type": "Expression"
+                                    },
+                                    "run_id": {
+                                        "value": "@pipeline().RunId",
+                                        "type": "Expression"
+                                    }
+                                }
+                            },
+                            "linkedServiceName": {
+                                "referenceName": "AzureDatabricksLS",
+                                "type": "LinkedServiceReference"
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        "parameters": {
+            "tableName": {
+                "type": "string",
+                "defaultValue": "users"
+            }
+        },
+        "annotations": [],
+        "lastPublishTime": "2026-08-17T20:49:15Z"
+    },
+    "type": "Microsoft.DataFactory/factories/pipelines"
+}

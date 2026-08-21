@@ -1,0 +1,13 @@
+{
+    "name": "ecommercemysqlds1",
+    "properties": {
+        "linkedServiceName": {
+            "referenceName": "ecommercemysqlls",
+            "type": "LinkedServiceReference"
+        },
+        "annotations": [],
+        "type": "MySqlTable",
+        "schema": []
+    },
+    "type": "Microsoft.DataFactory/factories/datasets"
+}

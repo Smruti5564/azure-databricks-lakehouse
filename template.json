@@ -1,0 +1,246 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vaults_kv_ecomm_prod_eastus_001_name": {
+            "defaultValue": "kv-ecomm-prod-eastus-001",
+            "type": "String"
+        },
+        "workspaces_adb_ecommerce_prod_001_name": {
+            "defaultValue": "adb-ecommerce-prod-001",
+            "type": "String"
+        },
+        "storageAccounts_saecommercedataprod001_name": {
+            "defaultValue": "saecommercedataprod001",
+            "type": "String"
+        },
+        "accessConnectors_unity_catalog_access_connector_name": {
+            "defaultValue": "unity-catalog-access-connector",
+            "type": "String"
+        },
+        "systemTopics_saecommercedataprod001_598f52ae_b5e4_4ad8_a600_837868d66193_name": {
+            "defaultValue": "saecommercedataprod001-598f52ae-b5e4-4ad8-a600-837868d66193",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Databricks/accessConnectors",
+            "apiVersion": "2026-01-01",
+            "name": "[parameters('accessConnectors_unity_catalog_access_connector_name')]",
+            "location": "eastus",
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {}
+        },
+        {
+            "type": "Microsoft.Databricks/workspaces",
+            "apiVersion": "2026-01-01",
+            "name": "[parameters('workspaces_adb_ecommerce_prod_001_name')]",
+            "location": "eastus2",
+            "sku": {
+                "name": "premium"
+            },
+            "properties": {
+                "computeMode": "Hybrid",
+                "defaultCatalog": {
+                    "initialType": "UnityCatalog"
+                },
+                "managedResourceGroupId": "[concat('/subscriptions/f9b317eb-5837-4fc6-b479-22595cf57a97/resourceGroups/databricks-rg-', parameters('workspaces_adb_ecommerce_prod_001_name'), '-yuu42hqacmf6g')]",
+                "parameters": {
+                    "enableNoPublicIp": {
+                        "type": "Bool",
+                        "value": true
+                    },
+                    "prepareEncryption": {
+                        "type": "Bool",
+                        "value": false
+                    },
+                    "requireInfrastructureEncryption": {
+                        "type": "Bool",
+                        "value": false
+                    },
+                    "storageAccountName": {
+                        "type": "String",
+                        "value": "dbstoragehu74ybsq6uxtm"
+                    },
+                    "storageAccountSkuName": {
+                        "type": "String",
+                        "value": "Standard_ZRS"
+                    }
+                },
+                "authorizations": [
+                    {
+                        "principalId": "9a74af6f-d153-4348-988a-e2672920bee9",
+                        "roleDefinitionId": "8e3af657-a8ff-443c-a75c-2fe8c4bcb635"
+                    }
+                ],
+                "createdBy": {},
+                "updatedBy": {}
+            }
+        },
+        {
+            "type": "Microsoft.KeyVault/vaults",
+            "apiVersion": "2026-03-01-preview",
+            "name": "[parameters('vaults_kv_ecomm_prod_eastus_001_name')]",
+            "location": "eastus",
+            "properties": {
+                "sku": {
+                    "family": "A",
+                    "name": "Standard"
+                },
+                "tenantId": "0898a5ef-4b6b-47ca-9de8-1c4501ea60c8",
+                "networkAcls": {
+                    "bypass": "None",
+                    "defaultAction": "Allow",
+                    "ipRules": [],
+                    "virtualNetworkRules": []
+                },
+                "accessPolicies": [],
+                "enabledForDeployment": false,
+                "enabledForDiskEncryption": false,
+                "enabledForTemplateDeployment": false,
+                "enableSoftDelete": true,
+                "softDeleteRetentionInDays": 90,
+                "enableRbacAuthorization": true,
+                "vaultUri": "[concat('https://', parameters('vaults_kv_ecomm_prod_eastus_001_name'), '.vault.azure.net/')]",
+                "provisioningState": "Succeeded",
+                "publicNetworkAccess": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2026-04-01",
+            "name": "[parameters('storageAccounts_saecommercedataprod001_name')]",
+            "location": "eastus",
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "kind": "StorageV2",
+            "properties": {
+                "dualStackEndpointPreference": {
+                    "publishIpv6Endpoint": false
+                },
+                "dnsEndpointType": "Standard",
+                "defaultToOAuthAuthentication": false,
+                "publicNetworkAccess": "Enabled",
+                "allowCrossTenantReplication": false,
+                "isSftpEnabled": false,
+                "minimumTlsVersion": "TLS1_2",
+                "allowBlobPublicAccess": false,
+                "allowSharedKeyAccess": true,
+                "isHnsEnabled": true,
+                "networkAcls": {
+                    "ipv6Rules": [],
+                    "bypass": "AzureServices",
+                    "virtualNetworkRules": [],
+                    "ipRules": [],
+                    "defaultAction": "Allow"
+                },
+                "supportsHttpsTrafficOnly": true,
+                "encryption": {
+                    "requireInfrastructureEncryption": false,
+                    "services": {
+                        "file": {
+                            "keyType": "Account",
+                            "enabled": true
+                        },
+                        "blob": {
+                            "keyType": "Account",
+                            "enabled": true
+                        }
+                    },
+                    "keySource": "Microsoft.Storage"
+                },
+                "accessTier": "Hot"
+            }
+        },
+        {
+            "type": "Microsoft.EventGrid/systemTopics",
+            "apiVersion": "2025-07-15-preview",
+            "name": "[parameters('systemTopics_saecommercedataprod001_598f52ae_b5e4_4ad8_a600_837868d66193_name')]",
+            "location": "eastus",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_saecommercedataprod001_name'))]"
+            ],
+            "properties": {
+                "source": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_saecommercedataprod001_name'))]",
+                "topicType": "microsoft.storage.storageaccounts"
+            }
+        },
+        {
+            "type": "Microsoft.KeyVault/vaults/secrets",
+            "apiVersion": "2026-03-01-preview",
+            "name": "[concat(parameters('vaults_kv_ecomm_prod_eastus_001_name'), '/adbtoken')]",
+            "location": "eastus",
+            "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', parameters('vaults_kv_ecomm_prod_eastus_001_name'))]"
+            ],
+            "properties": {
+                "attributes": {
+                    "enabled": true
+                }
+            }
+        },
+        {
+            "type": "Microsoft.EventGrid/systemTopics/eventSubscriptions",
+            "apiVersion": "2025-07-15-preview",
+            "name": "[concat(parameters('systemTopics_saecommercedataprod001_598f52ae_b5e4_4ad8_a600_837868d66193_name'), '/csms-subscription-dc6afb62-8a9d-412a-b942-ab2c09b409f8')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.EventGrid/systemTopics', parameters('systemTopics_saecommercedataprod001_598f52ae_b5e4_4ad8_a600_837868d66193_name'))]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_saecommercedataprod001_name'))]"
+            ],
+            "properties": {
+                "destination": {
+                    "properties": {
+                        "resourceId": "[concat(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_saecommercedataprod001_name')), '/')]",
+                        "queueName": "csms-queue-dc6afb62-8a9d-412a-b942-ab2c09b409f8"
+                    },
+                    "endpointType": "StorageQueue"
+                },
+                "filter": {
+                    "subjectBeginsWith": "/blobServices/default/containers/landing/blobs/",
+                    "includedEventTypes": [
+                        "Microsoft.Storage.BlobCreated",
+                        "Microsoft.Storage.BlobRenamed",
+                        "Microsoft.Storage.DirectoryRenamed",
+                        "Microsoft.Storage.DirectoryDeleted",
+                        "Microsoft.Storage.BlobDeleted"
+                    ],
+                    "advancedFilters": [
+                        {
+                            "values": [
+                                "CopyBlob",
+                                "PutBlob",
+                                "PutBlockList",
+                                "FlushWithClose",
+                                "SftpCommit",
+                                "RenameFile",
+                                "RenameDirectory",
+                                "SftpRename",
+                                "DeleteDirectory",
+                                "SftpRemoveDir",
+                                "DeleteBlob",
+                                "DeleteFile",
+                                "SftpRemove"
+                            ],
+                            "operatorType": "StringContains",
+                            "key": "data.api"
+                        }
+                    ]
+                },
+                "labels": [
+                    "{\"vendor\":\"databricks\",\"service\":\"unity-catalog\",\"description\":\"File event monitoring for storage account: saecommercedataprod001 - container: landing - pathPrefix: \"}"
+                ],
+                "eventDeliverySchema": "EventGridSchema",
+                "retryPolicy": {
+                    "maxDeliveryAttempts": 30,
+                    "eventTimeToLiveInMinutes": 1440
+                }
+            }
+        }
+    ]
+}
